@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 def rfc(text, notice):
     """<rfc> <number> - Gets the title and a link to an RFC"""
     text = text.strip().lower()
-    url = "http://tools.ietf.org/html/rfc{}".format(text)
+    url = "https://tools.ietf.org/html/rfc{}".format(text)
     data = str(urlopen(url).read())
     soup = BeautifulSoup(data)
     title = soup.title.string
