@@ -252,7 +252,6 @@ class Event:
         if target == self.nick or not reply_ping:
             self.conn.message(target, *messages)
         else:
-            #self.conn.message(target, "({}) {}".format(self.nick, messages[0]), *messages[1:])
             self.conn.message(target, "{}".format(messages[0]), *messages[1:])
 
     def action(self, message, target=None):
