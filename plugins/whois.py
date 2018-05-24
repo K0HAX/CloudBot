@@ -31,14 +31,33 @@ def whois(text, reply):
     info = []
 
     # We suppress errors here because different domains provide different data fields
-    with suppress(KeyError):
+    try:
         info.append(("Registrar", data["registrar"][0]))
+    except KeyError:
+        info.append(("Registrar", 'Not Found'))
+    except TypeError:
+        info.append(("Registrar", 'Not Found'))
 
-    with suppress(KeyError):
+    try:
+        info.append(("Registrant", data["contacts"]["registrant"]["name"]))
+    except KeyError:
+        info.append(("Registrant", 'Not Found'))
+    except TypeError:
+        info.append(("Registrant", 'Not Found'))
+
+    try:
         info.append(("Registered", data["creation_date"][0].strftime("%d-%m-%Y")))
+    except KeyError:
+        info.append(("Registered", 'Not Found'))
+    except TypeError:
+        info.append(("Registered", 'Not Found'))
 
-    with suppress(KeyError):
+    try:
         info.append(("Expires", data["expiration_date"][0].strftime("%d-%m-%Y")))
+    except KeyError:
+        info.append(("Expires", 'Not Found'))
+    except TypeError:
+        info.append(("Expires", 'Not Found'))
 
     if not info:
         return "No information returned."
