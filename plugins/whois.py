@@ -3,32 +3,64 @@ whois.py
 Provides a command to allow users to look up information on domain names.
 """
 
-import pythonwhois
+import sys
 from contextlib import suppress
 
 from cloudbot import hook
 
+if sys.version_info < (3, 7, 0):
+    import pythonwhois
+else:
+    pythonwhois = None
+
 
 @hook.command
-def whois(text):
-    """<domain> -- Does a whois query on <domain>."""
+def whois(text, reply):
+    """<domain> - Does a whois query on <domain>."""
+    if pythonwhois is None:
+        return "The pythonwhois library does not work on this version of Python."
+
     domain = text.strip().lower()
 
     try:
         data = pythonwhois.get_whois(domain, normalized=True)
     except pythonwhois.shared.WhoisException:
-        return "Invalid input."
+        reply("Invalid input.")
+        raise
+
     info = []
 
     # We suppress errors here because different domains provide different data fields
-    with suppress(KeyError):
-        info.append("\x02Registrar\x02: {}".format(data["registrar"][0]))
+    try:
+        info.append(("Registrar", data["registrar"][0]))
+    except KeyError:
+        info.append(("Registrar", 'Not Found'))
+    except TypeError:
+        info.append(("Registrar", 'Not Found'))
 
-    with suppress(KeyError):
-        info.append("\x02Registered\x02: {}".format(data["creation_date"][0].strftime("%d-%m-%Y")))
+    try:
+        info.append(("Registrant", data["contacts"]["registrant"]["name"]))
+    except KeyError:
+        info.append(("Registrant", 'Not Found'))
+    except TypeError:
+        info.append(("Registrant", 'Not Found'))
 
-    with suppress(KeyError):
-        info.append("\x02Expires\x02: {}".format(data["expiration_date"][0].strftime("%d-%m-%Y")))
+    try:
+        info.append(("Registered", data["creation_date"][0].strftime("%d-%m-%Y")))
+    except KeyError:
+        info.append(("Registered", 'Not Found'))
+    except TypeError:
+        info.append(("Registered", 'Not Found'))
 
-    info_text = ", ".join(info)
+    try:
+        info.append(("Expires", data["expiration_date"][0].strftime("%d-%m-%Y")))
+    except KeyError:
+        info.append(("Expires", 'Not Found'))
+    except TypeError:
+        info.append(("Expires", 'Not Found'))
+
+    if not info:
+        return "No information returned."
+
+    info_text = ", ".join("\x02{name}\x02: {info}".format(name=name, info=i) for name, i in info)
     return "{} - {}".format(domain, info_text)
